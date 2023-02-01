@@ -12,3 +12,15 @@ py_test(
         "//python/tflite_micro/test_utils:crosscheck",
     ],
 )
+
+py_test(
+    name = "space_to_batch_test",
+    size = "small",
+    srcs = [
+        "space_to_batch_test.py",
+    ],
+    deps = [
+        requirement("tensorflow-cpu"),
+        "//python/tflite_micro/test_utils:crosscheck",
+    ],
+)
