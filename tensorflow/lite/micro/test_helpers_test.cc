@@ -14,6 +14,7 @@ limitations under the License.
 ==============================================================================*/
 
 #include "tensorflow/lite/micro/test_helpers.h"
+#include <cstddef>
 #include "tensorflow/lite/micro/testing/micro_test.h"
 
 TF_LITE_MICRO_TESTS_BEGIN
@@ -127,6 +128,15 @@ TF_LITE_MICRO_TEST(CreateSymmetricPerChannelQuantizedTensor) {
   for (int i = 0; i < tensor_size; i++) {
     TF_LITE_MICRO_EXPECT_EQ(expected_quantized_values[i], result.data.int8[i]);
   }
+}
+
+TF_LITE_MICRO_TEST(IntArray) {
+  constexpr std::size_t size = 3;
+  auto array = tflite::testing::MakeIntArray(0, 1, 2);
+  TF_LITE_MICRO_EXPECT_EQ(array.size(), size);
+
+  TfLiteIntArray* tflarray = array;
+  TF_LITE_MICRO_EXPECT_EQ(static_cast<std::size_t>(tflarray->size), size);
 }
 
 TF_LITE_MICRO_TESTS_END

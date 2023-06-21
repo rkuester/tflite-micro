@@ -17,6 +17,7 @@ limitations under the License.
 #define TENSORFLOW_LITE_MICRO_TEST_HELPERS_H_
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <limits>
 #include <type_traits>
@@ -326,6 +327,22 @@ template <typename T>
 inline int ZeroPointFromMinMax(const float min, const float max) {
   return static_cast<int>(std::numeric_limits<T>::min()) +
          static_cast<int>(-min / ScaleFromMinMax<T>(min, max) + 0.5f);
+}
+
+template <std::size_t N>
+struct _IntArray {
+  std::array<int, N + 1> _array;
+
+  constexpr std::size_t size() const {return N;}
+
+  operator TfLiteIntArray*() {
+    return reinterpret_cast<TfLiteIntArray*>(_array.data());
+  }
+};
+
+template <typename... Values>
+_IntArray<sizeof...(Values)> MakeIntArray(Values&&... v) {
+  return {sizeof...(Values), std::forward<Values>(v)...};
 }
 
 }  // namespace testing

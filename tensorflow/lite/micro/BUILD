@@ -527,9 +527,9 @@ cc_test(
 )
 
 cc_test(
-    name = "testing_helpers_test",
+    name = "test_helpers_test",
     srcs = [
-        "testing_helpers_test.cc",
+        "test_helpers_test.cc",
     ],
     deps = [
         ":micro_framework",

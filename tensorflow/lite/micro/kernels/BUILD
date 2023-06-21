@@ -101,6 +101,17 @@ cc_library(
     ],
 )
 
+cc_library (
+    name = "kernel_test",
+    hdrs = ["kernel_test.h"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        ":kernel_runner",
+    ],
+)
+
 cc_library(
     name = "kernel_util",
     srcs = [
@@ -407,6 +418,20 @@ cc_test(
         "//tensorflow/lite/micro:test_helpers",
         "//tensorflow/lite/micro/testing:micro_test",
     ],
+)
+
+cc_test(
+    name = "add_test_new",
+    srcs = [
+        "add_test_new.cc",
+    ],
+    deps = [
+        ":kernel_test",
+        "//tensorflow/lite/micro:test_helpers",
+        "//tensorflow/lite/micro/testing:micro_test",
+        "@com_google_absl//absl/types:span",
+    ],
+    size = "small",
 )
 
 cc_test(
