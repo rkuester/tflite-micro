@@ -17,6 +17,7 @@ limitations under the License.
 #ifndef TENSORFLOW_LITE_MICRO_KERNELS_KERNEL_TEST_H_
 #define TENSORFLOW_LITE_MICRO_KERNELS_KERNEL_TEST_H_
 
+#include <algorithm>
 #include <cassert>
 #include <initializer_list>
 
@@ -65,19 +66,52 @@ class TestTensor {
   std::array<T, FlatSize> data_;
 };
 
+template <typename T, std::size_t FlatSize>
+TestTensor<T, FlatSize> MakeTestTensorSameShape(const TestTensor<T, FlatSize>& prototype) {
+  return prototype;
+}
+
+template<std::size_t Capacity>
+class DynamicIntArray {
+ public:
+  DynamicIntArray() { size_ = 0; }
+
+  TfLiteIntArray* AsTfLiteIntArray() {
+    return reinterpret_cast<TfLiteIntArray*>(array_.data());
+  }
+
+  operator TfLiteIntArray*() {
+    return reinterpret_cast<TfLiteIntArray*>(array_.data());
+  }
+
+  int size() const { return size_; }
+
+ private:
+  std::array<int, Capacity + 1> array_;
+  int& size_ = array_[0];
+};
+
 template <typename Params>
 void ExpectGolden(
     const TFLMRegistration& registration,
     Params& params,
-    const absl::Span<const TfLiteTensor> tensors,
-    TfLiteIntArray* input_indices,
-    TfLiteIntArray* output_indices,
-    const TfLiteTensor& golden) {
+    const absl::Span<const TfLiteTensor> input,
+    const absl::Span<TfLiteTensor> output,
+    const absl::Span<const TfLiteTensor> golden) {
+
+  const int kMaxTensors = 10;
+  assert(input.size() + output.size() <= kMaxTensors);
+  std::array<TfLiteTensor, kMaxTensors> tensors;
+  auto cursor = std::copy(input.begin(), input.end(), tensors.begin());
+  cursor = std::copy(output.begin(), output.end(), cursor);
+  const int tensors_size = cursor - tensors.begin();
+  DynamicIntArray<kMaxTensors> input_indices; // TODO: fix
+  DynamicIntArray<kMaxTensors> output_indices; // TODO: fix
 
   tflite::micro::KernelRunner runner{
       registration,
       tensors.data(),
-      static_cast<int>(tensors.size()),
+      tensors_size,
       input_indices,
       output_indices,
       &params
@@ -86,11 +120,12 @@ void ExpectGolden(
   TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, runner.InitAndPrepare());
   TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, runner.Invoke());
 
-  const TfLiteTensor output = tensors[2]; // TODO: do for all output_indices
-  TF_LITE_MICRO_EXPECT(TfLiteIntArrayEqual(output.dims, golden.dims));
-  for (int i = 0; i < ElementCount(*output.dims); ++i) {
+  // TODO: for all outputs & goldens
+  output.front() = tensors[2]; // TODO: fix
+  TF_LITE_MICRO_EXPECT(TfLiteIntArrayEqual(output.front().dims, golden.front().dims));
+  for (int i = 0; i < ElementCount(*output.front().dims); ++i) {
     constexpr float tolerance = 1e-5; // TODO: make configurable
-    TF_LITE_MICRO_EXPECT_NEAR(golden.data.f[i], output.data.f[i], tolerance); // TODO: dynamically find datatype
+    TF_LITE_MICRO_EXPECT_NEAR(golden.front().data.f[i], output.front().data.f[i], tolerance); // TODO: dynamically find datatype
   }
 }
 
