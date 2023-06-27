@@ -17,7 +17,11 @@ limitations under the License.
 #ifndef TENSORFLOW_LITE_MICRO_KERNELS_KERNEL_TEST_H_
 #define TENSORFLOW_LITE_MICRO_KERNELS_KERNEL_TEST_H_
 
+#include <cassert>
+#include <initializer_list>
+
 #include "absl/types/span.h"
+
 #include "tensorflow/lite/micro/kernels/kernel_runner.h"
 #include "tensorflow/lite/micro/micro_common.h"
 #include "tensorflow/lite/micro/test_helpers.h"
@@ -25,11 +29,47 @@ limitations under the License.
 
 namespace tflite {
 
+class Shape {
+ public:
+  Shape(const std::initializer_list<int>& values) {
+    assert(values.size() <= kMaxDims);
+    std::copy(values.begin(), values.end(), dims_.begin() + 1);
+    DimensionCount(values.size());
+  }
+
+  void DimensionCount(int set) { dims_[0] = set; }
+  int DimensionCount() const { return dims_[0]; }
+
+  operator TfLiteIntArray*() {
+    return reinterpret_cast<TfLiteIntArray*>(dims_.data());
+  }
+
+ private:
+  static constexpr int kMaxDims = 6;
+  std::array<int, 1 + kMaxDims> dims_;
+};
+
+template <typename T, std::size_t FlatSize>
+class TestTensor {
+ public:
+  TestTensor(const Shape& s, const std::array<T, FlatSize>& v)
+      : shape_{s}, data_{v} {}
+
+  TestTensor(const Shape& s)
+      : shape_{s} {}
+
+  Shape shape() const { return shape_; }
+
+ private:
+  Shape shape_;
+  std::array<T, FlatSize> data_;
+};
+
 template <typename Params>
 void ExpectGolden(
     const TFLMRegistration& registration,
     Params& params,
-    const absl::Span<TfLiteTensor> tensors,
+    const absl::Span<const TfLiteTensor> tensors,
     TfLiteIntArray* input_indices,
     TfLiteIntArray* output_indices,
     const TfLiteTensor& golden) {
