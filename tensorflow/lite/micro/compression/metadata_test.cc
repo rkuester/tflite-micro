@@ -18,7 +18,7 @@
 #include <iostream>
 #include <vector>
 
-#include "tensorflow/lite/micro/compression/metadata_generated.h"
+#include "tensorflow/lite/micro/compression/metadata_saved.h"
 #include "tensorflow/lite/micro/hexdump.h"
 #include "tensorflow/lite/micro/testing/micro_test.h"
 
