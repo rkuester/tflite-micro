@@ -75,6 +75,7 @@ py_binary(
         "@absl_py//absl/flags",
         "@absl_py//absl/logging",
         "@flatbuffers//:runtime_py",
+        requirement("bitarray"),
         requirement("numpy"),
     ],
 )
@@ -92,22 +93,6 @@ py_test(
 )
 
 py_binary(
-    name = "discretize",
-    srcs = [
-        "discretize.py",
-    ],
-    deps = [
-        ":metadata_py",
-        "//tensorflow/lite/python:schema_py",
-        "@absl_py//absl:app",
-        "@absl_py//absl/flags",
-        "@absl_py//absl/logging",
-        "@flatbuffers//:runtime_py",
-        requirement("numpy"),
-    ],
-)
-
-py_binary(
     name = "view",
     srcs = [
         "view.py",
@@ -116,6 +101,20 @@ py_binary(
         ":metadata_py",
         "//tensorflow/lite/python:schema_py",
         "@absl_py//absl:app",
+        requirement("bitarray"),
+    ],
+)
+
+py_test(
+    name = "view_test",
+    size = "small",
+    srcs = [
+        "view_test.py",
+    ],
+    deps = [
+        ":test_models",
+        ":view",
+        "@absl_py//absl/testing:absltest",
     ],
 )
 
