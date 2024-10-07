@@ -66,7 +66,9 @@ cc_library(
         ":micro_common",
         ":micro_graph",
         ":micro_log",
+        ":micro_profiler",
         "//tensorflow/lite/c:common",
+        "//tensorflow/lite:type_to_tflitetype",
     ],
 )
 
