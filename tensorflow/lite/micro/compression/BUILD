@@ -3,6 +3,11 @@ load("//tensorflow/lite/micro:build_def.bzl",
     "tflm_cc_test",
 )
 load(
+    "//tensorflow/lite/micro:build_def.bzl",
+    "tflm_cc_library",
+    "tflm_cc_test",
+)
+load(
     "@flatbuffers//:build_defs.bzl",
     "flatbuffer_cc_library",
     "flatbuffer_py_library",

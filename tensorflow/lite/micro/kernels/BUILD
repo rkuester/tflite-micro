@@ -1,5 +1,6 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-load("//tensorflow/lite/micro:build_def.bzl",
+load(
+    "//tensorflow/lite/micro:build_def.bzl",
     "tflm_cc_library",
     "tflm_cc_test",
     "tflm_copts",
@@ -75,6 +76,30 @@ tflm_cc_library(
         "//tensorflow/lite/c:common",
         "//tensorflow/lite/micro:test_helpers",
         "//tensorflow/lite/micro/testing:micro_test",
+    ],
+)
+
+tflm_cc_library(
+    name = "decompress",
+    srcs = [
+        "decompress.cc",
+        "decompress_common.cc",
+    ],
+    hdrs = [
+        "decompress.h",
+    ],
+    visibility = [
+        ":kernel_friends",
+        ":tflite_micro",
+    ],
+    deps = [
+        "//tensorflow/lite:type_to_tflitetype",
+        "//tensorflow/lite/kernels/internal:compatibility",
+        "//tensorflow/lite/micro:compression",
+        "//tensorflow/lite/micro:micro_common",
+        "//tensorflow/lite/micro:micro_log",
+        "//tensorflow/lite/micro:micro_profiler",
+        "//tensorflow/lite/micro:micro_utils",
     ],
 )
 
@@ -607,6 +632,24 @@ tflm_cc_test(
         "//tensorflow/lite/c:common",
         "//tensorflow/lite/micro:debug_log",
         "//tensorflow/lite/micro:op_resolvers",
+        "//tensorflow/lite/micro:test_helpers",
+        "//tensorflow/lite/micro/testing:micro_test",
+    ],
+)
+
+tflm_cc_test(
+    name = "decompress_test",
+    srcs = [
+        "decompress_test.cc",
+    ],
+    target_compatible_with = select({
+        "//conditions:default": ["@platforms//:incompatible"],
+        "//:with_compression_enabled": [],
+    }),
+    deps = [
+        "//tensorflow/lite/c:common",
+        "//tensorflow/lite/micro:micro_arena_constants",
+        "//tensorflow/lite/micro:micro_log",
         "//tensorflow/lite/micro:test_helpers",
         "//tensorflow/lite/micro/testing:micro_test",
     ],

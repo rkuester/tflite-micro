@@ -113,10 +113,7 @@ def unpack_subgraphs(subgraphs):
 def unpack_metadata(metadata):
   if metadata is None:
     return None
-  return [{
-      "name": _decode_name(m.name),
-      "buffer": m.buffer
-  } for m in metadata]
+  return [{"name": _decode_name(m.name), "buffer": m.buffer} for m in metadata]
 
 
 def unpack_lut_tensors(lut_tensors):
