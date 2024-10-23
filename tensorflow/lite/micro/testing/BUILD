@@ -1,9 +1,5 @@
 load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 load("@tflm_pip_deps//:requirements.bzl", "requirement")
-load("//tensorflow/lite/micro:build_def.bzl",
-    "tflm_cc_library",
-    "tflm_cc_test",
-)
 load(
     "//tensorflow/lite/micro:build_def.bzl",
     "tflm_cc_library",
