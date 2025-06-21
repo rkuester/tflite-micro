@@ -29,6 +29,9 @@ from __future__ import print_function
 from absl import app
 import numpy as np
 import tensorflow as tf
+# Workaround for TensorFlow 2.19.0 keras lazy loader issue
+import os
+os.environ['TF_USE_LEGACY_KERAS'] = '1'
 
 
 def generate_conv_model(write_to_file=True,
