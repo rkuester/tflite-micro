@@ -115,6 +115,7 @@ py_library(
         ":metadata_py",
         ":model_facade",
         ":spec",
+        "//tensorflow/lite/micro/tools:tflite_flatbuffer_align",
         "@absl_py//absl:app",
         "@absl_py//absl/flags",
         "@flatbuffers//:runtime_py",
