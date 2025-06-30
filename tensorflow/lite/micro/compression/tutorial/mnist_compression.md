@@ -836,10 +836,29 @@ tensors:
 ```
 
 ### Compression Impact
-With 16 clusters and 4-bit indices, each compressed tensor achieves:
-- Storage: 4 bits per weight + 16 × 8 bits for the lookup table
-- Compression ratio: Approximately 2x for each tensor
-- Total impact: Depends on the size of compressed layers relative to the whole model
+
+The overall compression ratio depends on several factors:
+
+1. **Number of layers compressed**: The more layers you compress, the closer you 
+   approach the theoretical maximum compression ratio. For example, with INT8 
+   quantization (8-bit values) and 16 clusters (4-bit indices), you can approach 
+   50% compression (8 bits → 4 bits) as more layers are compressed.
+
+2. **Size of compressed layers**: Larger layers contribute more to the overall 
+   compression. Compressing a 256-unit dense layer has more impact than compressing 
+   a small convolutional layer.
+
+3. **Lookup table overhead**: Each compressed tensor needs a lookup table (16 × 8 
+   bits = 128 bits for 16 clusters). This overhead is negligible for large tensors 
+   but can be significant for very small ones.
+
+4. **Model architecture**: Models with many large fully-connected or convolutional 
+   layers benefit more from compression than models dominated by small layers or 
+   non-compressible operations.
+
+In this tutorial, we're compressing only 2 out of 8 layers, so our overall 
+compression ratio is less than the theoretical maximum. If we compressed all 
+eligible layers, we could achieve closer to 2x compression on top of quantization.
 
 ```python
 print("\nCreating compression specification...")
