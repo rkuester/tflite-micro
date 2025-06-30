@@ -159,8 +159,8 @@ plt.show()
 
 ## Create a Model Architecture for Compression Demonstration
 
-For this tutorial, we'll use a larger model than typically needed for MNIST.
-This is intentional - we want to clearly demonstrate the impact of compression.
+For this tutorial, we'll use a model that's appropriately sized to demonstrate
+compression while keeping training time reasonable.
 
 TFLM currently supports compression on:
 - **Conv2D layers**: Convolutional weights can be compressed
@@ -171,20 +171,20 @@ TFLM currently supports compression on:
 model = tf_keras.Sequential([
     tf_keras.layers.Input(shape=MNIST_INPUT_SHAPE[1:]),  # Skip batch dimension
     
-    # Convolutional layers with more filters than typical MNIST models
-    tf_keras.layers.Conv2D(32, (5, 5), activation='relu'),
+    # Convolutional layers
+    tf_keras.layers.Conv2D(16, (5, 5), activation='relu'),
     tf_keras.layers.MaxPooling2D((2, 2)),
     
-    # Second conv layer with even more filters
-    tf_keras.layers.Conv2D(64, (3, 3), activation='relu'),
+    # Second conv layer
+    tf_keras.layers.Conv2D(32, (3, 3), activation='relu'),
     tf_keras.layers.MaxPooling2D((2, 2)),
     
     # Flatten for fully connected layers
     tf_keras.layers.Flatten(),
     
-    # Large fully connected layers
-    tf_keras.layers.Dense(256, activation='relu'),
+    # Fully connected layers
     tf_keras.layers.Dense(128, activation='relu'),
+    tf_keras.layers.Dense(64, activation='relu'),
     
     # Output layer
     tf_keras.layers.Dense(10, activation='softmax')
@@ -200,7 +200,7 @@ model.summary()
 ## Train the Model
 
 Now we'll train our baseline model. Note that this tutorial focuses on demonstrating
-compression techniques, not optimal training practices. We're using 5 epochs which
+compression techniques, not optimal training practices. We're using 3 epochs which
 is sufficient for MNIST and keeps the tutorial quick.
 
 For production training best practices, see:
@@ -214,7 +214,7 @@ accuracy we trade for compression.
 # Train the model (simplified training for demonstration)
 history = model.fit(
     train_images, train_labels,
-    epochs=5,
+    epochs=3,
     batch_size=128,
     validation_split=0.1,
     verbose=1
@@ -318,8 +318,8 @@ cloned_model.set_weights(model.get_weights())
 # the TFLite conversion process. This ensures consistency between the layers we
 # cluster and the layers we compress.
 CLUSTERING_CONFIG = {
-    'conv2d_1': 16,  # Second conv layer (64 filters)
-    'dense': 16,     # First dense layer (256 units)
+    'conv2d_1': 16,  # Second conv layer
+    'dense': 16,     # First dense layer
 }
 
 # Important: The cluster_weights() function doesn't modify layers in-place.
@@ -372,12 +372,12 @@ print("Clustered model summary:")
 clustered_model.summary()
 
 # Fine-tune the clustered model
-# Note: We use 3 epochs for demonstration. For optimal fine-tuning strategies, see:
+# Note: We use 2 epochs for demonstration. For optimal fine-tuning strategies, see:
 # https://www.tensorflow.org/model_optimization/guide/clustering/clustering_comprehensive_guide
 print("\nFine-tuning clustered model...")
 clustered_history = clustered_model.fit(
     train_images, train_labels,
-    epochs=3,  # Simplified fine-tuning for demonstration
+    epochs=2,  # Simplified fine-tuning for demonstration
     batch_size=128,
     validation_split=0.1,
     verbose=1
