@@ -114,6 +114,14 @@ The data preparation steps are standard:
 # Load MNIST dataset
 (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
 
+# Define the input shape for MNIST images
+# This will be used throughout the tutorial for model creation and TFLite conversion
+# Shape format: [batch_size, height, width, channels]
+# - None: Variable batch size (TFLite will use batch size 1 at inference)
+# - 28, 28: MNIST image dimensions
+# - 1: Grayscale images have 1 channel
+MNIST_INPUT_SHAPE = [None, 28, 28, 1]
+
 # Normalize pixel values to [0, 1]
 train_images = train_images.astype('float32') / 255.0
 test_images = test_images.astype('float32') / 255.0
@@ -161,7 +169,7 @@ TFLM currently supports compression on:
 ```python
 # Create a model architecture optimized for demonstrating compression
 model = tf_keras.Sequential([
-    tf_keras.layers.Input(shape=(28, 28, 1)),
+    tf_keras.layers.Input(shape=MNIST_INPUT_SHAPE[1:]),  # Skip batch dimension
     
     # Convolutional layers with more filters than typical MNIST models
     tf_keras.layers.Conv2D(32, (5, 5), activation='relu'),
@@ -358,7 +366,7 @@ clustered_model.compile(
 )
 
 # Build the model by calling it on dummy data
-clustered_model.build(input_shape=(None, 28, 28, 1))
+clustered_model.build(input_shape=MNIST_INPUT_SHAPE)
 
 print("Clustered model summary:")
 clustered_model.summary()
@@ -421,8 +429,25 @@ the model size. This is expected! The real size reduction comes when we combine
 clustering with quantization and TFLM's LUT compression in the following steps.
 
 ```python
-# Convert the original model to TFLite format
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
+# Convert the original model to TFLite format using concrete function
+#
+# Why use get_concrete_function()?
+# - Using concrete functions ensures the resulting model will work with TFLM
+# - Keras models are high-level abstractions that support multiple input shapes
+# - TFLM requires all tensor shapes to be known at compile time (no dynamic tensors)
+# - When converting Keras models directly via convert_from_keras(), the TFLite
+#   converter sometimes creates models with dynamic tensors that are
+#   incompatible with TFLM
+#
+# The conversion process:
+# 1. Wrap the Keras model in tf.function to create a TensorFlow graph
+# 2. Call get_concrete_function() with a TensorSpec that defines the exact input shape
+# 3. This creates a "concrete function"---a graph with all shapes and types determined
+# 4. TFLite converter can then convert this concrete graph
+concrete_func = tf.function(lambda x: model(x)).get_concrete_function(
+    tf.TensorSpec(shape=MNIST_INPUT_SHAPE, dtype=tf.float32)
+)
+converter = tf.lite.TFLiteConverter.from_concrete_functions([concrete_func])
 tflite_model = converter.convert()
 
 # Save the model
@@ -431,8 +456,12 @@ with open('mnist_model.tflite', 'wb') as f:
 
 print(f"Original model size: {len(tflite_model):,} bytes ({len(tflite_model)/1024:.2f} KB)")
 
-# Convert the clustered model to TFLite format
-converter_clustered = tf.lite.TFLiteConverter.from_keras_model(final_clustered_model)
+# Convert the clustered model to TFLite format using concrete function
+# Same process as above---we need to create a concrete function with fixed input shapes
+clustered_concrete_func = tf.function(lambda x: final_clustered_model(x)).get_concrete_function(
+    tf.TensorSpec(shape=MNIST_INPUT_SHAPE, dtype=tf.float32)
+)
+converter_clustered = tf.lite.TFLiteConverter.from_concrete_functions([clustered_concrete_func])
 tflite_clustered_model = converter_clustered.convert()
 
 # Save the clustered model
@@ -480,8 +509,13 @@ def representative_dataset():
         indices = np.random.randint(0, len(train_images), size=1)
         yield [train_images[indices].astype(np.float32)]
 
-# Convert original model with post-training quantization
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
+# Convert original model with post-training quantization using concrete function
+# Even though we're quantizing, the concrete function still expects float32 input
+# The quantization happens during conversion, not in the concrete function definition
+quant_concrete_func = tf.function(lambda x: model(x)).get_concrete_function(
+    tf.TensorSpec(shape=MNIST_INPUT_SHAPE, dtype=tf.float32)
+)
+converter = tf.lite.TFLiteConverter.from_concrete_functions([quant_concrete_func])
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
 converter.representative_dataset = representative_dataset
 converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
@@ -499,8 +533,11 @@ print(f"  Size: {len(quantized_model):,} bytes ({len(quantized_model)/1024:.2f} 
 print(f"  Compression ratio: {len(tflite_model) / len(quantized_model):.2f}x")
 print(f"  Size reduction: {(1 - len(quantized_model)/len(tflite_model))*100:.1f}%")
 
-# Convert clustered model with post-training quantization
-converter_clustered_quant = tf.lite.TFLiteConverter.from_keras_model(final_clustered_model)
+# Convert clustered model with post-training quantization using concrete function
+clustered_quant_concrete_func = tf.function(lambda x: final_clustered_model(x)).get_concrete_function(
+    tf.TensorSpec(shape=MNIST_INPUT_SHAPE, dtype=tf.float32)
+)
+converter_clustered_quant = tf.lite.TFLiteConverter.from_concrete_functions([clustered_quant_concrete_func])
 converter_clustered_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_clustered_quant.representative_dataset = representative_dataset
 converter_clustered_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
