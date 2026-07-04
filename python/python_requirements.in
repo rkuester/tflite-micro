@@ -29,6 +29,7 @@
 absl_py
 ai-edge-litert
 bitarray
+jupytext
 mako
 matplotlib
 numpy
