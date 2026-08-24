@@ -124,6 +124,7 @@ py_library(
     ],
     deps = [
         ":compressor",
+        ":constant_inputs",
         ":decode_insert",
         ":huffman",
         ":lut",
@@ -368,6 +369,15 @@ tflm_py_library(
         ":decode",
         ":model_editor",
         ":spec",
+    ],
+)
+
+tflm_py_library(
+    name = "constant_inputs",
+    srcs = ["constant_inputs.py"],
+    deps = [
+        ":model_editor",
+        "//tensorflow/lite/python:schema_py",
     ],
 )
 
