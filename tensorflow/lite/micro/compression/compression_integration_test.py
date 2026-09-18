@@ -119,7 +119,9 @@ class LutCompressionTest(unittest.TestCase):
       spec.Tensor(
         subgraph=0,
         tensor=0,
-        compression=[spec.LookUpTableCompression(index_bitwidth=2)],
+        compression=[
+          spec.LookUpTableCompression(index_bitwidth=2, mode=spec.PerTensor())
+        ],
       )
     ]
 
@@ -135,7 +137,9 @@ class LutCompressionTest(unittest.TestCase):
       spec.Tensor(
         subgraph=0,
         tensor=0,
-        compression=[spec.LookUpTableCompression(index_bitwidth=2)],
+        compression=[
+          spec.LookUpTableCompression(index_bitwidth=2, mode=spec.PerTensor())
+        ],
       )
     ]
 
@@ -166,7 +170,9 @@ class LutCompressionTest(unittest.TestCase):
       spec.Tensor(
         subgraph=0,
         tensor=0,
-        compression=[spec.LookUpTableCompression(index_bitwidth=2)],
+        compression=[
+          spec.LookUpTableCompression(index_bitwidth=2, mode=spec.PerTensor())
+        ],
       )
     ]
 
@@ -190,7 +196,9 @@ class LutCompressionTest(unittest.TestCase):
       spec.Tensor(
         subgraph=0,
         tensor=0,
-        compression=[spec.LookUpTableCompression(index_bitwidth=4)],
+        compression=[
+          spec.LookUpTableCompression(index_bitwidth=4, mode=spec.PerTensor())
+        ],
       )
     ]
 
@@ -206,7 +214,11 @@ class LutCompressionTest(unittest.TestCase):
       spec.Tensor(
         subgraph=0,
         tensor=0,
-        compression=[spec.LookUpTableCompression(index_bitwidth=2)],
+        compression=[
+          spec.LookUpTableCompression(
+            index_bitwidth=2, mode=spec.PerChannel(axis=0)
+          )
+        ],
       )
     ]
 
@@ -222,7 +234,9 @@ class LutCompressionTest(unittest.TestCase):
       spec.Tensor(
         subgraph=0,
         tensor=0,
-        compression=[spec.LookUpTableCompression(index_bitwidth=2)],
+        compression=[
+          spec.LookUpTableCompression(index_bitwidth=2, mode=spec.PerTensor())
+        ],
       )
     ]
 
@@ -373,12 +387,16 @@ class AltDecompressionMemoryTest(unittest.TestCase):
       spec.Tensor(
         subgraph=0,
         tensor=0,  # weights1
-        compression=[spec.LookUpTableCompression(index_bitwidth=2)],
+        compression=[
+          spec.LookUpTableCompression(index_bitwidth=2, mode=spec.PerTensor())
+        ],
       ),
       spec.Tensor(
         subgraph=0,
         tensor=1,  # weights2
-        compression=[spec.LookUpTableCompression(index_bitwidth=2)],
+        compression=[
+          spec.LookUpTableCompression(index_bitwidth=2, mode=spec.PerTensor())
+        ],
       ),
     ]
 
